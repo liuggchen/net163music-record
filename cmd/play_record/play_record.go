@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -14,6 +15,11 @@ import (
 	"net163music-record/internal/model"
 	"net163music-record/internal/u"
 )
+
+func init() {
+	location, _ := time.LoadLocation("Asia/Shanghai")
+	time.Local = location
+}
 
 func main() {
 
@@ -95,11 +101,21 @@ func main() {
 
 	log.Printf("====== %s ======\n", time.Now().Format("2006-01-02 15:04:05"))
 	log.Printf("新增歌曲： %d首\n", len(todayNewItems))
+	if len(todayNewItems) > 0 {
+		sort.Slice(todayNewItems, func(i, j int) bool {
+			return todayNewItems[i].Count > todayNewItems[j].Count
+		})
+	}
 	for _, item := range todayNewItems {
 		log.Printf("%-5d%-15d %s\n", item.Count, item.Id, item.Name)
 	}
 
 	log.Printf("今日接着听歌曲： %d首\n", len(todayMoreItems))
+	if len(todayMoreItems) > 0 {
+		sort.Slice(todayMoreItems, func(i, j int) bool {
+			return todayMoreItems[i].Count > todayMoreItems[j].Count
+		})
+	}
 	for _, item := range todayMoreItems {
 		log.Printf("%-5d%-15d %s\n", item.Count, item.Id, item.Name)
 	}
