@@ -16,19 +16,49 @@ import (
 	"net163music-record/internal/u"
 )
 
+var uid string
+var onlyPrint bool
+
 func init() {
 	location, _ := time.LoadLocation("Asia/Shanghai")
 	time.Local = location
+
+	for i, item := range os.Args {
+		if i == 0 {
+			continue
+		}
+		arg := strings.TrimLeft(item, "-")
+		if arg == "" {
+			continue
+		}
+		splitN := strings.SplitN(arg, "=", 2)
+		var key = strings.ToLower(splitN[0])
+		var value string
+		if len(splitN) > 1 {
+			value = splitN[1]
+		}
+		switch key {
+		case "u", "uid":
+			if value == "" {
+				log.Fatalf("uid is required")
+			}
+			uid = value
+		case "o", "onlyprint", "p":
+			onlyPrint = true
+		}
+	}
 }
 
 func main() {
-
-	bytes, err := os.ReadFile("uid.txt")
-	if err != nil {
-		log.Fatalf("read uid.txt error: %s", err.Error())
+	if uid == "" {
+		bytes, err := os.ReadFile("uid.txt")
+		if err != nil {
+			log.Fatalf("read uid.txt error: %s", err.Error())
+		}
+		uid = string(bytes)
 	}
 
-	User := &UserRecordService{UId: string(bytes)}
+	User := &UserRecordService{UId: uid}
 	r, err := User.All()
 	if err != nil {
 		log.Fatalf("err: %s", err.Error())
@@ -90,13 +120,15 @@ func main() {
 		}
 	}
 
-	newFile, err := os.OpenFile("data/new.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
-	if err != nil {
-		log.Printf("create file error: %s", err.Error())
+	if !onlyPrint {
+		newFile, err := os.OpenFile("data/new.txt", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
+		if err != nil {
+			log.Printf("create file error: %s", err.Error())
+		}
+		defer newFile.Close()
+		log.SetOutput(io.MultiWriter(newFile, os.Stdout))
 	}
-	defer newFile.Close()
 
-	log.SetOutput(io.MultiWriter(newFile, os.Stdout))
 	log.SetFlags(log.Lmsgprefix)
 
 	log.Printf("====== %s ======\n", time.Now().Format("2006-01-02 15:04:05"))
