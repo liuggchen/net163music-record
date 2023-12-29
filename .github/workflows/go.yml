@@ -4,10 +4,8 @@
 name: Go
 
 on:
-  push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+  schedule:
+  - cron: "*/5 * * * *"
 
 jobs:
 
@@ -24,7 +22,9 @@ jobs:
     - name: Build
       run: |
         echo "I'm here!"
-        go build -v ./cmd/play_record
+        go build -o 163 ./cmd/play_record
 
-    - name: Test
-      run: go test -v ./...
+    - name: Run
+      run: |
+        echo "403593299" > uid.txt
+        ./163
